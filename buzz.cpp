@@ -28,14 +28,23 @@ Note metallica_melody[] = {
     {NOTE_C6, WHOLE_NOTE-1}, {NOTE_SILENCE, WHOLE_NOTE},
 };
 
-void playNote(uint32_t buzzerPin, int pitch, int duration) {
-    int noteDuration = DURATION2MS(duration);
-    tone(buzzerPin, pitch, noteDuration*0.9);
-    delay(noteDuration);
-    noTone(buzzerPin); // Stop playing the note 
+void buzzer_setup() {
+    /**
+     * @brief Setup the buzzer pin
+     * 
+     * @param buzzerPin The pin where the buzzer is connected
+    */
+    pinMode(BUZZER_PIN, OUTPUT);
 }
 
-void playMelodyMario(uint32_t buzzerPin) {
+void playNote(int pitch, int duration) {
+    int noteDuration = DURATION2MS(duration);
+    tone(BUZZER_PIN, pitch, noteDuration*0.9);
+    delay(noteDuration);
+    noTone(BUZZER_PIN); // Stop playing the note 
+}
+
+void playMelodyMario() {
     /**
      * @brief Play the melody of Mario's main theme
      * 
@@ -44,11 +53,11 @@ void playMelodyMario(uint32_t buzzerPin) {
     size_t noteCount = sizeof(mario_melody)/sizeof(Note);
 
     for (size_t thisNote = 0; thisNote < noteCount; thisNote++) {
-        playNote(buzzerPin, mario_melody[thisNote].pitch, mario_melody[thisNote].duration);
+        playNote(mario_melody[thisNote].pitch, mario_melody[thisNote].duration);
     }
 }
 
-void playMelodyMetallica(uint32_t buzzerPin) {
+void playMelodyMetallica() {
     /**
      * @brief Play the melody of Metallica's Master of Puppets
      * 
@@ -57,28 +66,27 @@ void playMelodyMetallica(uint32_t buzzerPin) {
     size_t noteCount = sizeof(metallica_melody)/sizeof(Note);
 
     for (size_t thisNote = 0; thisNote < noteCount; thisNote++) {
-        playNote(buzzerPin, metallica_melody[thisNote].pitch, metallica_melody[thisNote].duration);
+        playNote(metallica_melody[thisNote].pitch, metallica_melody[thisNote].duration);
     }
 }
 
-void playMetal(uint32_t buzzerPin, uint32_t time_shifting, uint32_t max_time_shifting, uint32_t lower_threshold, uint32_t beep_duration=40) {
+void playMetal(uint32_t time_shifting, uint32_t max_time_shifting, uint32_t lower_threshold, uint32_t beep_duration=40) {
     /**
      * @brief Play a tone according to metal detection
      * 
-     * @param buzzerPin The pin where the buzzer is connected
      * @param time_shifting The time shifting value, measured by the metal detector
      * @param max_time_shifting The time shifting value that will correspond to the highest note. Must be expressed in the same unit as "time_shifting".
      * @param lower_threshold The time shifting value that will correspond to the lowest note. Must be expressed in the same unit as "time_shifting".
      * @param beep_duration How long a beep is, expressed in milliseconds [ms].
     */
     if (time_shifting < lower_threshold) {
-        noTone(buzzerPin);
+        noTone(BUZZER_PIN);
         return;
     } else {
         time_shifting = max(min(time_shifting, max_time_shifting), 0);
         int pitch = map(time_shifting, 0, max_time_shifting, NOTE_METAL_LOWEST, NOTE_METAL_HIGHEST);
         
-        tone(buzzerPin, pitch, beep_duration);
+        tone(BUZZER_PIN, pitch, beep_duration);
         return;
     }
 }
