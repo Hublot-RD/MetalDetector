@@ -11,7 +11,7 @@ Outputs:
 - Buzzer sound with pitch proportionnal to time shifting
 
 
-Script inspired from https://forum.arduino.cc/t/samd21-mkrzero-analog-comparator/1194763
+
 */
 
 #include <Arduino.h>
@@ -19,19 +19,7 @@ Script inspired from https://forum.arduino.cc/t/samd21-mkrzero-analog-comparator
 #include "battery.hpp"
 #include "pulse.hpp"
 #include "pinout.hpp"
-
-
-#define DEBUG true
-
-// Timing
-#define MAIN_CLK_FREQ_MHZ 48      // Main clock frequency [MHz]. This cannot be modified.
-#define PULSE_WIDTH_US    200     // Length of a pulse [us]
-#define PULSE_FREQ_HZ     30      // Pulse frequency [Hz]
-#define STARTUP_TIME_MS   500     // Time to let the supply capacitor charge before starting to do pulses [ms]
-#define LOOP_FREQ_HZ      10       // Main loop frequency [Hz]
-
-// Other
-#define SERIAL_BAUD_RATE  115200  // Baud rate for the USB communication
+#include "parameters.hpp"
 
 
 uint32_t captured_value = 0;

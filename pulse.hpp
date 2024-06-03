@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "pinout.hpp"
+#include "parameters.hpp"
 
 // Function prototypes
 void pulse_setup();

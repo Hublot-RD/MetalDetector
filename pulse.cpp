@@ -1,3 +1,7 @@
+/*
+Script inspired from https://forum.arduino.cc/t/samd21-mkrzero-analog-comparator/1194763
+*/
+
 #include "pulse.hpp"
 
 
