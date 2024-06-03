@@ -4,6 +4,8 @@ Script inspired from https://forum.arduino.cc/t/samd21-mkrzero-analog-comparator
 
 #include "pulse.hpp"
 
+// // Use of global variables
+// extern uint32_t captured_value;
 
 
 

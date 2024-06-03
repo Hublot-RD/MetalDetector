@@ -5,13 +5,17 @@ This script is made for the Arduino Nano 33 IoT, based on the SAMD21G18A microco
 
 User interface
 Inputs :
-- None
+- Mode button
+- Zero button
+- Sensitivity potentiometer
+- Threshold potentiometer
+- (Volume potentiometer)
+
 
 Outputs:
 - Buzzer sound with pitch proportionnal to time shifting
-
-
-
+- 8 LEDs as a display. Can either show which coil is detecting some metal, battery level, mode selection
+- Serial communication with the computer
 */
 
 #include <Arduino.h>
@@ -21,8 +25,7 @@ Outputs:
 #include "pinout.hpp"
 #include "parameters.hpp"
 
-
-uint32_t captured_value = 0;
+// Global variables
 uint32_t tare = 0;
 
 
@@ -38,7 +41,7 @@ void setup() {
   pulse_setup();
 
   // Wait for sensor to be active an zero it
-  while(captured_value <= 0){SerialUSB.println("a");};
+  while(captured_value <= 0){SerialUSB.println("Waiting for captured value ...");delay(10);};
   tare = captured_value;
 
   // Play startup melody
