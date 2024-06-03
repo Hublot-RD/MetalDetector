@@ -36,9 +36,9 @@ void setup() {
   delay(STARTUP_TIME_MS);
   
   // Setup each library
-  battery_setup();
-  buzzer_setup();
-  pulse_setup();
+  battery::setup();
+  buzzer::setup();
+  pulse::setup();
 
   // Wait for sensor to be active an zero it
   while(captured_value <= 0){SerialUSB.println("Waiting for captured value ...");delay(10);};
@@ -46,7 +46,7 @@ void setup() {
 
   // Play startup melody
   // playMelodyMetallica(BUZZER_PIN);
-  playMelodyMario();
+  buzzer::playMelodyMario();
 }
 
 
@@ -60,7 +60,7 @@ void loop() {
   uint32_t time_shifting = 0;
   if(captured_value > tare) {time_shifting = captured_value - tare;}
   
-  playMetal(time_shifting, 25*MAIN_CLK_FREQ_MHZ, 10, (1000/LOOP_FREQ_HZ)*0.4);
+  buzzer::playMetal(time_shifting, 25*MAIN_CLK_FREQ_MHZ, 10, (1000/LOOP_FREQ_HZ)*0.4);
 
   delay(1000/LOOP_FREQ_HZ);
 }

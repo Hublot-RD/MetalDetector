@@ -4,12 +4,9 @@ Script inspired from https://forum.arduino.cc/t/samd21-mkrzero-analog-comparator
 
 #include "pulse.hpp"
 
-// // Use of global variables
-// extern uint32_t captured_value;
+namespace pulse {
 
-
-
-void pulse_setup() {
+void setup() {
   // Disable interrupts
   __disable_irq();
 
@@ -178,3 +175,8 @@ void AC_Handler(void) {
     AC->INTFLAG.reg = AC_INTFLAG_COMP1;
   }
 }
+
+} // namespace pulse
+
+
+

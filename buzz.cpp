@@ -12,6 +12,12 @@
 #define NOTE_METAL_LOWEST NOTE_E6
 #define NOTE_METAL_HIGHEST NOTE_DS7
 
+namespace buzzer {
+// Define a structure to hold a note and its duration
+struct Note {
+  int pitch;
+  int duration;
+};
 
 // Mario main theme melody
 Note mario_melody[] = {
@@ -28,7 +34,7 @@ Note metallica_melody[] = {
     {NOTE_C6, WHOLE_NOTE-1}, {NOTE_SILENCE, WHOLE_NOTE},
 };
 
-void buzzer_setup() {
+void setup() {
     /**
      * @brief Setup the buzzer pin
      * 
@@ -90,3 +96,5 @@ void playMetal(uint32_t time_shifting, uint32_t max_time_shifting, uint32_t lowe
         return;
     }
 }
+
+} // namespace buzz

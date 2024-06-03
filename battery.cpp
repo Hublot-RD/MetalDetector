@@ -1,8 +1,9 @@
 #include "battery.hpp"
 
 
+namespace battery {
 
-void battery_setup() {
+void setup() {
   pinMode(VBAT_PIN, INPUT);
   pinMode(BATSELA_PIN, OUTPUT);
   pinMode(BATSELB_PIN, OUTPUT);
@@ -14,7 +15,7 @@ void battery_setup() {
 }
 
 
-void battery_select(uint8_t channel) {
+void select(uint8_t channel) {
   if(channel & 0b100) {digitalWrite(BATSELC_PIN, HIGH);}
   else {digitalWrite(BATSELC_PIN, LOW);}
   if(channel & 0b010) {digitalWrite(BATSELB_PIN, HIGH);}
@@ -23,9 +24,9 @@ void battery_select(uint8_t channel) {
   else {digitalWrite(BATSELA_PIN, LOW);}
 }
 
-float battery_read(uint8_t channel) {
+float read(uint8_t channel) {
   float voltage = 0.0;
-  battery_select(channel);
+  battery::select(channel);
 
   int measurement = analogRead(VBAT_PIN);
 
@@ -35,3 +36,5 @@ float battery_read(uint8_t channel) {
 
   return voltage;
 }
+
+} // namespace battery

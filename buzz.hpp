@@ -7,16 +7,12 @@
 #include <Arduino.h>
 #include "pinout.hpp"
 
-// Define a structure to hold a note and its duration
-struct Note {
-  int pitch;
-  int duration;
-};
-
-// Function prototypes
-void buzzer_setup();
-void playMelodyMario();
-void playMelodyMetallica();
-void playMetal(uint32_t time_shifting, uint32_t max_time_shifting, uint32_t lower_threshold, uint32_t beep_duration);
+namespace buzzer {
+    // Function prototypes
+    void setup();
+    void playMelodyMario();
+    void playMelodyMetallica();
+    void playMetal(uint32_t time_shifting, uint32_t max_time_shifting, uint32_t lower_threshold, uint32_t beep_duration);
+} // namespace buzz
 
 #endif // BUZZ_H

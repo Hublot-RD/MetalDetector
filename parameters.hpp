@@ -22,6 +22,6 @@
 // #include <Arduino.h>
 
 // Declare global variables
-extern uint32_t captured_value;    // Value captured by the Analog Comparator, it is the time between the pulse and the signal detection
+volatile extern uint32_t captured_value;    // Value captured by the Analog Comparator, it is the time between the pulse and the signal detection
 
 #endif // PARAMETERS_H

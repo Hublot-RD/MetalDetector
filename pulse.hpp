@@ -5,7 +5,9 @@
 #include "pinout.hpp"
 #include "parameters.hpp"
 
-// Function prototypes
-void pulse_setup();
+namespace pulse {
+    // Function prototypes
+    void setup();
+}
 
 #endif // PULSE_H
