@@ -41,7 +41,7 @@ void setup() {
   pulse::setup();
 
   // Wait for sensor to be active an zero it
-  while(captured_value <= 0){SerialUSB.println("Waiting for captured value ...");delay(10);};
+  while(captured_value <= 0 && DEBUG){SerialUSB.println("Waiting for captured value ...");delay(10);};
   tare = captured_value;
 
   // Play startup melody
@@ -51,15 +51,21 @@ void setup() {
 
 
 void loop() {
-  SerialUSB.print("Tare value [us]:  ");
-  SerialUSB.println(tare/float(MAIN_CLK_FREQ_MHZ));
-  SerialUSB.print("Captured value [us]:  ");
-  SerialUSB.println(captured_value/float(MAIN_CLK_FREQ_MHZ));
+  // static uint8_t channel = 0;
+  // pulse::select(channel);
+  // channel = (channel+1)%8;
+  if (DEBUG) {
+    SerialUSB.print("Tare value [us]:  ");
+    SerialUSB.println(tare/float(MAIN_CLK_FREQ_MHZ));
+    SerialUSB.print("Captured value [us]:  ");
+    SerialUSB.println(captured_value/float(MAIN_CLK_FREQ_MHZ));
+  }
 
   // Compute time shifting
   uint32_t time_shifting = 0;
   if(captured_value > tare) {time_shifting = captured_value - tare;}
-  
+
+  // Play sound
   buzzer::playMetal(time_shifting, 25*MAIN_CLK_FREQ_MHZ, 10, (1000/LOOP_FREQ_HZ)*0.4);
 
   delay(1000/LOOP_FREQ_HZ);

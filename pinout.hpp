@@ -3,15 +3,34 @@
 
 #include <Arduino.h>
 
-// Arduino numbering is used. Not any value can be used, so better to keep these ones or check chap. 7 of datasheet.
-#define PULSE_PIN       13          // Pin to control MOSFETs in Arduino numbering
-#define SIGNAL_PIN      5           // Pin to measure the signal (positive input of the Analog Comparator)
+/*
+Arduino numbering is used. 
+Not any value can be used, so better to keep these ones or check chap. 7 of SAMD21G18A datasheet.
+*/
+
+// Debugging
 #define REF_PIN         14          // Pin to check the reference voltage (negative input of the Analog Comparator). Used only if DEBUG == true.
 #define AC_OUT_PIN      12          // Pin to check the Analog Comparator output. Used only if DEBUG == true.
-#define BUZZER_PIN      11          // Pin for the buzzer sound
-#define VBAT_PIN        A1
-#define BATSELA_PIN     6
+
+// User interface
+#define BUZZER_PIN      9           // Pin for the buzzer sound
+#define LEDS_PIN        20          // Pins for the 8 LEDs
+#define SENSITIVITY_PIN 21          // Pin for the sensitivity potentiometer
+#define THRESHOLD_PIN   19          // Pin for the threshold potentiometer
+#define MODE_PIN        11          // Pin for the mode button
+#define ZERO_PIN        10          // Pin for the zero button
+
+// Battery
+#define VBAT_PIN        15          // Pin to measure the battery voltage
+#define BATSELA_PIN     6           // Pins to select the cell to measure
 #define BATSELB_PIN     7
 #define BATSELC_PIN     8
+
+// Pulse
+#define PULSE_PIN       13          // Pin to control MOSFETs in Arduino numbering
+#define SIGNAL_PIN      5           // Pin to measure the signal (positive input of the Analog Comparator)
+#define COILSELA_PIN    2           // Pins to select the coil to pulse
+#define COILSELB_PIN    3
+#define COILSELC_PIN    4
 
 #endif // PINOUT_H

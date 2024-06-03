@@ -1,5 +1,6 @@
 {
     "board": "arduino:samd:nano_33_iot",
     "sketch": "MetalDetector.ino",
-    "output": "./build"
+    "output": "./build",
+    "port": "COM10"
 }
