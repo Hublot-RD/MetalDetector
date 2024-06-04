@@ -8,8 +8,8 @@
 #define MAIN_CLK_FREQ_MHZ 48      // Main clock frequency [MHz]. This cannot be modified.
 
 // Timing parameters
-#define STARTUP_TIME_MS   500     // Time to let the supply capacitor charge before starting to do pulses [ms]
-#define LOOP_FREQ_HZ      10       // Main loop frequency [Hz]
+#define STARTUP_TIME_MS   1000    // Time to let the supply capacitor charge before starting to do pulses [ms]
+#define LOOP_FREQ_HZ      1       // Main loop frequency [Hz]
 
 // Pulse parameters
 #define PULSE_WIDTH_US    200     // Length of a pulse [us]

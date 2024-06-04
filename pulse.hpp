@@ -8,6 +8,7 @@
 namespace pulse {
     // Function prototypes
     void setup();
+    void select(uint8_t channel);
 }
 
 #endif // PULSE_H

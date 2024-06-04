@@ -7,8 +7,8 @@ Script inspired from https://forum.arduino.cc/t/samd21-mkrzero-analog-comparator
 namespace pulse {
 
 void setup() {
-  // Disable interrupts
-  __disable_irq();
+    // Disable interrupts
+    __disable_irq();
 
     // Power management ///////////////////////////////////////////////////////////////////////
 
@@ -162,6 +162,15 @@ void setup() {
 
     // Enable interrupts
     __enable_irq();
+}
+
+void select(uint8_t channel) {
+    if(channel & 0b100) {digitalWrite(COILSELC_PIN, HIGH);}
+    else {digitalWrite(COILSELC_PIN, LOW);}
+    if(channel & 0b010) {digitalWrite(COILSELB_PIN, HIGH);}
+    else {digitalWrite(COILSELB_PIN, LOW);}
+    if(channel & 0b001) {digitalWrite(COILSELA_PIN, HIGH);}
+    else {digitalWrite(COILSELA_PIN, LOW);}
 }
 
 

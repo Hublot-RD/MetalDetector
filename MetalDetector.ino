@@ -41,7 +41,16 @@ void setup() {
   pulse::setup();
 
   // Wait for sensor to be active an zero it
-  while(captured_value <= 0 && DEBUG){SerialUSB.println("Waiting for captured value ...");delay(10);};
+  while(captured_value <= 0){
+    static uint8_t i = 1;
+    if(DEBUG) {SerialUSB.println("Waiting for captured value ...");}
+    delay(100);
+    if(i > 10){
+      if(DEBUG) {SerialUSB.println("Could not capture a value. Continuing without tare = 0.");}
+      break;
+    }
+    i++;
+  };
   tare = captured_value;
 
   // Play startup melody
@@ -51,9 +60,11 @@ void setup() {
 
 
 void loop() {
-  // static uint8_t channel = 0;
-  // pulse::select(channel);
-  // channel = (channel+1)%8;
+  static uint8_t channel = 0;
+  pulse::select(channel);
+  channel = (channel+1)%2;
+  if (DEBUG) {SerialUSB.print("Channel: ");SerialUSB.println(channel);}
+
   if (DEBUG) {
     SerialUSB.print("Tare value [us]:  ");
     SerialUSB.println(tare/float(MAIN_CLK_FREQ_MHZ));
