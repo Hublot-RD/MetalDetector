@@ -48,6 +48,12 @@ void setup() {
 
 
     // Configure port pins /////////////////////////////////////////////////////////////////////
+    pinMode(COILSELA_PIN, OUTPUT);
+    pinMode(COILSELB_PIN, OUTPUT);
+    pinMode(COILSELC_PIN, OUTPUT);
+    digitalWrite(COILSELA_PIN, LOW);
+    digitalWrite(COILSELB_PIN, LOW);
+    digitalWrite(COILSELC_PIN, LOW);
 
     // Connect the AC channel 1 input to PIN A4
     PORT->Group[g_APinDescription[SIGNAL_PIN].ulPort].PINCFG[g_APinDescription[SIGNAL_PIN].ulPin].bit.PMUXEN = 1;                   // Enable PORT multiplexer
@@ -173,7 +179,9 @@ void select(uint8_t channel) {
     else {digitalWrite(COILSELA_PIN, LOW);}
 }
 
+} // namespace pulse
 
+// Interrupt handler for the Analog Comparator. Must be outside of any namespace
 void AC_Handler(void) {
   // Check if compare interrupt
   if(AC->INTFLAG.bit.COMP1 && AC->INTENSET.bit.COMP1) {
@@ -184,8 +192,3 @@ void AC_Handler(void) {
     AC->INTFLAG.reg = AC_INTFLAG_COMP1;
   }
 }
-
-} // namespace pulse
-
-
-
