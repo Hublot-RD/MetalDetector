@@ -19,11 +19,12 @@ Outputs:
 */
 
 #include <Arduino.h>
-#include "buzz.hpp"
-#include "battery.hpp"
-#include "pulse.hpp"
 #include "pinout.hpp"
 #include "parameters.hpp"
+#include "src\battery\battery.hpp"
+#include "src\buzz\buzz.hpp"
+#include "src\knobs\knobs.hpp"
+#include "src\pulse\pulse.hpp"
 
 // Global variables
 uint32_t tare = 0;
@@ -39,6 +40,7 @@ void setup() {
   battery::setup();
   buzzer::setup();
   pulse::setup();
+  knobs::setup();
 
   // Wait for sensor to be active an zero it
   while(captured_value <= 0){
@@ -61,15 +63,17 @@ void setup() {
 
 void loop() {
   static uint8_t channel = 0;
-  pulse::select(channel);
-  channel = (channel+1)%2;
-  if (DEBUG) {SerialUSB.print("Channel: ");SerialUSB.println(channel);}
+  static uint8_t cycle_cnt = 0;
+  if (cycle_cnt >= 5*LOOP_FREQ_HZ) {
+    channel = (channel+1) % 2;
+    pulse::select(channel);
+    cycle_cnt = 0;
+  }
 
   if (DEBUG) {
-    SerialUSB.print("Tare value [us]:  ");
-    SerialUSB.println(tare/float(MAIN_CLK_FREQ_MHZ));
-    SerialUSB.print("Captured value [us]:  ");
-    SerialUSB.println(captured_value/float(MAIN_CLK_FREQ_MHZ));
+    SerialUSB.print("Channel: "); SerialUSB.println(channel);
+    SerialUSB.print("Tare value [us]:  "); SerialUSB.println(tare/float(MAIN_CLK_FREQ_MHZ));
+    SerialUSB.print("Captured value [us]:  "); SerialUSB.println(captured_value/float(MAIN_CLK_FREQ_MHZ));
   }
 
   // Compute time shifting
@@ -79,5 +83,6 @@ void loop() {
   // Play sound
   buzzer::playMetal(time_shifting, 25*MAIN_CLK_FREQ_MHZ, 10, (1000/LOOP_FREQ_HZ)*0.4);
 
+  cycle_cnt++;
   delay(1000/LOOP_FREQ_HZ);
 }
