@@ -1,16 +1,9 @@
 #include "buzz.hpp"
 #include "pitches.hpp"
 
-#define BPM 168
+
 #define DURATION2MS(duration)   (60000 * 4) / (BPM * duration)
 
-#define WHOLE_NOTE 3
-#define HALF_NOTE 6
-#define QUARTER_NOTE 12
-#define EIGHTH_NOTE 24
-
-#define NOTE_METAL_LOWEST NOTE_E6
-#define NOTE_METAL_HIGHEST NOTE_DS7
 
 namespace buzzer {
 // Define a structure to hold a note and its duration

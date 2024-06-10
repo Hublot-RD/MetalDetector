@@ -6,6 +6,9 @@ Script inspired from https://forum.arduino.cc/t/samd21-mkrzero-analog-comparator
 
 namespace pulse {
 
+// Global variables definition
+volatile uint32_t captured_value = 0;
+
 void setup() {
     // Disable interrupts
     __disable_irq();
@@ -59,7 +62,7 @@ void setup() {
     PORT->Group[g_APinDescription[SIGNAL_PIN].ulPort].PINCFG[g_APinDescription[SIGNAL_PIN].ulPin].bit.PMUXEN = 1;                   // Enable PORT multiplexer
     PORT->Group[g_APinDescription[SIGNAL_PIN].ulPort].PMUX[g_APinDescription[SIGNAL_PIN].ulPin >> 1].reg |= PORT_PMUX_PMUXO_B;      // Select channel B = AC channel 1 input = AIN[1]
 
-    if(DEBUG) {
+    if(ALL_OUTPUTS) {
     // Connect the AC channel 1 output to PIN D10
     PORT->Group[g_APinDescription[AC_OUT_PIN].ulPort].PINCFG[g_APinDescription[AC_OUT_PIN].ulPin].bit.PMUXEN = 1;                 // Enable PORT multiplexer
     PORT->Group[g_APinDescription[AC_OUT_PIN].ulPort].PMUX[g_APinDescription[AC_OUT_PIN].ulPin >> 1].reg |= PORT_PMUX_PMUXO_H;    // Select channel H = AC channel 1 output = AC/CMP[1]
@@ -69,7 +72,7 @@ void setup() {
     PORT->Group[g_APinDescription[PULSE_PIN].ulPort].PINCFG[g_APinDescription[PULSE_PIN].ulPin].bit.PMUXEN = 1;                     // Enable PORT multiplexer
     PORT->Group[g_APinDescription[PULSE_PIN].ulPort].PMUX[g_APinDescription[PULSE_PIN].ulPin >> 1].reg |= PORT_PMUX_PMUXO_F;        // Select channel F = Timer TCC0 waveform output = TCC0/WO[4]
 
-    if(DEBUG) {
+    if(ALL_OUTPUTS) {
     // Connect the DAC output to PIN A0. Useful for DEBUGGING
     PORT->Group[g_APinDescription[REF_PIN].ulPort].PINCFG[g_APinDescription[REF_PIN].ulPin].bit.PMUXEN = 1;                       // Enable PORT multiplexer
     PORT->Group[g_APinDescription[REF_PIN].ulPort].PMUX[g_APinDescription[REF_PIN].ulPin].bit.PMUXO = PORT_PMUX_PMUXO_B_Val;      // Select channel B = DAC output = VOUT
@@ -185,7 +188,7 @@ void AC_Handler(void) {
   // Check if compare interrupt
   if(AC->INTFLAG.bit.COMP1 && AC->INTENSET.bit.COMP1) {
     // Read timer value
-    captured_value = TC4->COUNT16.COUNT.reg;
+    pulse::captured_value = TC4->COUNT16.COUNT.reg;
     
     // Clear interrupt flag by writing '1' to it
     AC->INTFLAG.reg = AC_INTFLAG_COMP1;

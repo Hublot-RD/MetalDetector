@@ -2,8 +2,6 @@
 
 namespace leds {
 
-constexpr uint8_t NUM_LEDS = 8;         // Number of LEDs
-constexpr uint8_t BRIGHTNESS = 100;     // LEDs brightness, 0-255
 CRGBArray<NUM_LEDS> led_stick;
 
 void setup(void) {

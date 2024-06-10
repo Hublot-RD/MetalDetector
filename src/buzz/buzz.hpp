@@ -7,6 +7,11 @@
 #include <Arduino.h>
 
 namespace buzzer {
+    // Constants
+    constexpr uint16_t NOTE_METAL_LOWEST = NOTE_E6;     // Lowest note for the metal detection sound
+    constexpr uint16_t NOTE_METAL_HIGHEST = NOTE_DS7;   // Highest note for the metal detection sound
+    constexpr uint8_t BPM = 168;                        // Beats per minute, used for the melody
+    
     // pinout
     constexpr uint8_t BUZZER_PIN = 9;   // Pin for the buzzer sound
 

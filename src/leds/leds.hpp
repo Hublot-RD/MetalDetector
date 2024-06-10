@@ -5,6 +5,10 @@
 #include <FastLED.h>
 
 namespace leds {
+    // Constants
+    constexpr uint8_t NUM_LEDS = 8;         // Number of LEDs
+    constexpr uint8_t BRIGHTNESS = 100;     // LEDs brightness, 0-255
+
     // Pinout
     constexpr uint8_t LEDS_PIN = 20;          // Pins for the 8 LEDs
 
