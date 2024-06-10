@@ -12,6 +12,8 @@ namespace knobs {
 
     // Function prototypes
     void setup(void);
+    int get_sensitivity();
+    int get_threshold();
     
 } // namespace knobs
 

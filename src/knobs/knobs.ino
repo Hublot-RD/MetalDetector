@@ -23,9 +23,7 @@ void setup() {
 
 
 void loop() {
-    SerialUSB.print("Mode pin: "); SerialUSB.println(digitalRead(knobs::MODE_PIN));
-    SerialUSB.print("Zero pin: "); SerialUSB.println(digitalRead(knobs::ZERO_PIN));
-    SerialUSB.print("Sensitivity pin: "); SerialUSB.println(analogRead(knobs::SENSITIVITY_PIN));
-    SerialUSB.print("Threshold pin: "); SerialUSB.println(analogRead(knobs::THRESHOLD_PIN));
-    delay(100);
+    SerialUSB.print("Sensitivity: "); SerialUSB.println(knobs::get_sensitivity());
+    SerialUSB.print("Threshold: "); SerialUSB.println(knobs::get_threshold());
+    delay(1000);
 }

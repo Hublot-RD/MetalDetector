@@ -165,7 +165,6 @@ void setup() {
     DAC->DATA.reg = DAC_DATA_DATA(100);           // 10 bit resolution on 1000mV. 100 => ~100 mv
     while(DAC->STATUS.bit.SYNCBUSY);              // Wait for synchronization
 
-
     // Enable interrupts
     __enable_irq();
 }
