@@ -7,9 +7,21 @@ Script inspired from https://forum.arduino.cc/t/samd21-mkrzero-analog-comparator
 namespace pulse {
 
 // Global variables definition
+bool active_coils[NB_COILS];
+measure meas;
 volatile uint32_t captured_value = 0;
 
+// Private functions prototypes
+void select(uint8_t channel);
+uint8_t select_next_coil(uint8_t last_coil);
+void tare_coil(uint8_t coil);
+
+// Function definitions
 void setup() {
+    // Initialize global variables
+    active_coils[0] = true;
+    for(uint8_t i = 1; i < NB_COILS; i++) {active_coils[i] = false;}
+
     // Disable interrupts
     __disable_irq();
 
@@ -158,8 +170,8 @@ void setup() {
     // Digital to Analog Converter (DAC) ///////////////////////////////////////////////////////
 
     DAC->CTRLB.reg =  DAC_CTRLB_REFSEL_INT1V |    // Set 1V as reference voltage
-                    DAC_CTRLB_IOEN |            // Enable output to internal reference
-                    DAC_CTRLB_EOEN;             // Enable output on VOUT pin. Useful for DEBUGGING
+                      DAC_CTRLB_IOEN |            // Enable output to internal reference
+                      DAC_CTRLB_EOEN;             // Enable output on VOUT pin. Useful for DEBUGGING
     while(DAC->STATUS.bit.SYNCBUSY);              // Wait for synchronization
 
     DAC->CTRLA.bit.ENABLE = 1;                    // Enable the DAC before writing data
@@ -172,25 +184,127 @@ void setup() {
     __enable_irq();
 }
 
-void select(uint8_t channel) {
-    if(channel & 0b100) {digitalWrite(COILSELC_PIN, HIGH);}
+void set_active_coils(bool desired_coils[NB_COILS]) {
+    /**
+     * @brief Set the active coils.
+     * 
+     * @param desired_coils[8] Array of booleans to set the active coils. The index of the array corresponds to the coil number.
+    */
+    for(uint8_t i = 0; i < 8; i++) {
+        active_coils[i] = desired_coils[i];
+    }
+}
+
+struct measure get_captured_value() {
+    /**
+     * @brief Get the captured value.
+     * 
+     * @return struct measure The captured value.
+    */
+    for(uint8_t i = 0; i < NB_COILS; i++) {
+        if(meas.captured_value[i] > meas.tare[i]) {
+            meas.time_shifting[i] = meas.captured_value[i] - meas.tare[i];
+        } else {
+            meas.time_shifting[i] = 0;
+        }
+    }
+    return meas;
+}
+
+void set_threshold(uint32_t threshold_mv) {
+    /**
+     * @brief Set the threshold.
+     * 
+     * @param threshold The threshold to set, in mV. 10 bit resolution on 1000mV.
+    */
+    uint16_t threshold = threshold_mv * 1024 / 1000;
+
+    // Set the threshold
+    DAC->DATA.reg = DAC_DATA_DATA(threshold);
+    // Wait for synchronization
+    while(DAC->STATUS.bit.SYNCBUSY);
+}
+
+void tare() {
+    /**
+     * @brief Tare all active the coils.
+    */
+    for(uint8_t i = 0; i < NB_COILS; i++) {
+        if(active_coils[i]) {tare_coil(i);}
+    }
+}
+
+void select(uint8_t coil) {
+    /**
+     * @brief Select the coil to pulse.
+     *  
+     * @param channel The channel to select.
+    */ 
+    if(coil & 0b100) {digitalWrite(COILSELC_PIN, HIGH);}
     else {digitalWrite(COILSELC_PIN, LOW);}
-    if(channel & 0b010) {digitalWrite(COILSELB_PIN, HIGH);}
+    if(coil & 0b010) {digitalWrite(COILSELB_PIN, HIGH);}
     else {digitalWrite(COILSELB_PIN, LOW);}
-    if(channel & 0b001) {digitalWrite(COILSELA_PIN, HIGH);}
+    if(coil & 0b001) {digitalWrite(COILSELA_PIN, HIGH);}
     else {digitalWrite(COILSELA_PIN, LOW);}
+    delay(1);
+}
+
+void tare_coil(uint8_t coil) {
+    /**
+     * @brief Tare one coil.
+     * 
+     * @param coil The coil to tare.
+    */
+    uint32_t capture_sum = 0;
+
+    // Select the coil
+    select(coil);
+
+    // Acquire 10 values and average them
+    static uint32_t tries = 0;
+    for(uint8_t nb_acquisitions = 0; (nb_acquisitions < NB_TARE_ACQUI) && (tries < 10*NB_TARE_ACQUI); tries++) {
+        if(captured_value > 0) {
+            capture_sum += captured_value;
+            nb_acquisitions++;
+        }
+        delay(10);
+    }
+
+    meas.tare[coil] = capture_sum / (float) NB_TARE_ACQUI;
+}
+
+uint8_t select_next_coil(uint8_t last_coil) {
+    /**
+     * @brief Select the next coil to pulse.
+     * 
+     * @param last_coil The last coil that was pulsed.
+    */
+    for(uint8_t i = 0; i < NB_COILS; i++){
+        if(active_coils[(last_coil + i) % NB_COILS]) {
+            select((last_coil + i) % NB_COILS);
+            return (last_coil + i) % NB_COILS;
+        }
+    }
+    return 0;
 }
 
 } // namespace pulse
 
 // Interrupt handler for the Analog Comparator. Must be outside of any namespace
 void AC_Handler(void) {
-  // Check if compare interrupt
-  if(AC->INTFLAG.bit.COMP1 && AC->INTENSET.bit.COMP1) {
-    // Read timer value
-    pulse::captured_value = TC4->COUNT16.COUNT.reg;
-    
-    // Clear interrupt flag by writing '1' to it
-    AC->INTFLAG.reg = AC_INTFLAG_COMP1;
-  }
+    // Check if compare interrupt
+    if(AC->INTFLAG.bit.COMP1 && AC->INTENSET.bit.COMP1) {
+        static uint8_t pulsing_coil = 0;
+
+        // Read timer value
+        pulse::captured_value = TC4->COUNT16.COUNT.reg;
+
+        // Save the captured value
+        pulse::meas.captured_value[pulsing_coil] = pulse::captured_value;
+
+        pulsing_coil = pulse::select_next_coil(pulsing_coil);
+        
+        // Clear interrupt flag by writing '1' to it
+        AC->INTFLAG.reg = AC_INTFLAG_COMP1;
+    }
 }
