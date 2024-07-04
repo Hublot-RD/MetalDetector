@@ -10,6 +10,7 @@ namespace pulse {
 bool active_coils[NB_COILS];
 measure meas;
 volatile uint32_t captured_value = 0;
+uint8_t pulsing_coil = 0;
 
 // Private functions prototypes
 void select(uint8_t channel);
@@ -18,6 +19,11 @@ void tare_coil(uint8_t coil);
 
 // Function definitions
 void setup() {
+    /**
+     * @brief Setup the pulse library.
+     * 
+     * This function starts the pulsing and measuring of the coils.
+    */
     // Initialize global variables
     active_coils[0] = true;
     for(uint8_t i = 1; i < NB_COILS; i++) {active_coils[i] = false;}
@@ -30,6 +36,7 @@ void setup() {
     PM->APBCMASK.reg |= PM_APBCMASK_EVSYS;      // Activate the event system peripheral
     PM->APBCMASK.reg |= PM_APBCMASK_AC;         // Activate the analog comparator peripheral
     PM->APBCMASK.reg |= PM_APBCMASK_TCC0;       // Activate the timer counter 0 peripheral
+    PM->APBCMASK.reg |= PM_APBCMASK_TC3;        // Activate the timer counter 3 peripheral
     PM->APBCMASK.reg |= PM_APBCMASK_TC4;        // Activate the timer counter 4 peripheral
     PM->APBCMASK.reg |= PM_APBCMASK_DAC;        // Activate the digital to analog converter peripheral
 
@@ -51,6 +58,11 @@ void setup() {
                         GCLK_CLKCTRL_ID_TCC0_TCC1;
     while (GCLK->STATUS.bit.SYNCBUSY);               // Wait for synchronization
 
+    GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN |         // Route the 48MHz GCLK0 to the Timer Counter 2 & 3 clock
+                        GCLK_CLKCTRL_GEN_GCLK0 |
+                        GCLK_CLKCTRL_ID_TCC2_TC3;
+    while (GCLK->STATUS.bit.SYNCBUSY);               // Wait for synchronization
+    
     GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN |         // Route the 48MHz GCLK0 to the Timer Counter 4 & 5 clock
                         GCLK_CLKCTRL_GEN_GCLK0 |
                         GCLK_CLKCTRL_ID_TC4_TC5;
@@ -94,6 +106,9 @@ void setup() {
     // Event system ////////////////////////////////////////////////////////////////////////////
 
     EVSYS->USER.reg = EVSYS_USER_CHANNEL(1) |                                // Attach the event user (receiver) to channel 0 (n + 1)
+                    EVSYS_USER_USER(EVSYS_ID_USER_TC3_EVU);                // Set the event user (receiver) as timer TC3
+
+    EVSYS->USER.reg = EVSYS_USER_CHANNEL(1) |                                // Attach the event user (receiver) to channel 0 (n + 1)
                     EVSYS_USER_USER(EVSYS_ID_USER_TC4_EVU);                // Set the event user (receiver) as timer TC4
 
     EVSYS->CHANNEL.reg = EVSYS_CHANNEL_EDGSEL_NO_EVT_OUTPUT |                // No event edge detection (because asynchronous)
@@ -102,6 +117,34 @@ void setup() {
                         EVSYS_CHANNEL_CHANNEL(0);                           // Attach the generator (sender) to channel 0 
 
 
+    // TC3 Timer ///////////////////////////////////////////////////////////////////////////////
+
+    // TC3->COUNT16.CTRLA.bit.PRESCALER |= TC_CTRLA_PRESCALER_DIV1024_Val;   // Divide 48MHz clock by 1024 => ~48KHz
+
+    TC3->COUNT16.CTRLA.reg = TC_CTRLA_MODE_COUNT16;   // Configure TC3 timer for 16-bit mode
+    while(TC3->COUNT16.STATUS.bit.SYNCBUSY);          // Wait for synchronization
+
+    TC3->COUNT16.EVCTRL.reg |= TC_EVCTRL_TCEI |       // Enable input event
+                                TC_EVCTRL_EVACT_RETRIGGER;   // Select event action
+    while(TC3->COUNT16.STATUS.bit.SYNCBUSY);          // Wait for synchronization
+
+    TC3->COUNT16.CTRLBSET.reg = TC_CTRLBSET_ONESHOT;    // Enable oneshot mode
+    while(TC3->COUNT16.STATUS.bit.SYNCBUSY);            // Wait for synchronization
+
+    TC3->COUNT16.INTENSET.reg = TC_INTENSET_MC0;      // Enable compare match interrupt on channel 0
+    while(TC3->COUNT16.STATUS.bit.SYNCBUSY);          // Wait for synchronization
+    NVIC_SetPriority(TC3_IRQn, 2);       // Set TC3 interrupt priority
+    NVIC_EnableIRQ(TC3_IRQn);            // Enable Interrupts for TC3 at NVIC
+
+    TC3->COUNT16.CC[0].reg = COILCHANGE_DELAY_US * MAIN_CLK_FREQ_MHZ;   // Set the compare match value
+    while(TC3->COUNT16.STATUS.bit.SYNCBUSY);          // Wait for synchronization
+
+    TC3->COUNT16.CTRLA.reg |= TC_CTRLA_WAVEGEN_NFRQ;    // Normal Frequency mode
+    while(TC3->COUNT16.STATUS.bit.SYNCBUSY);            // Wait for synchronization
+
+    TC3->COUNT16.CTRLA.bit.ENABLE = 1;          // Enable timer TC3
+    while (TC3->COUNT16.STATUS.bit.SYNCBUSY);   // Wait for synchronization
+    
     // TC4 Timer ///////////////////////////////////////////////////////////////////////////////
 
     TC4->COUNT16.CTRLA.reg = TC_CTRLA_MODE_COUNT16;   // Configure TC4/TC5 timers for 16-bit mode
@@ -130,7 +173,7 @@ void setup() {
     AC->COMPCTRL[1].reg = AC_COMPCTRL_OUT_ASYNC |       // Enable comparator output in asynchronous mode
                         AC_COMPCTRL_MUXPOS_PIN1 |     // Set the positive input multiplexer to pin 1
                         AC_COMPCTRL_MUXNEG_DAC |      // Set the negative input multiplexer to the voltage scaler
-                        AC_COMPCTRL_INTSEL_FALLING |  // Generate interrupts only on rising edge of AC output
+                        AC_COMPCTRL_INTSEL_FALLING |  // Generate interrupts only on falling edge of AC output
                         AC_COMPCTRL_SPEED_HIGH;       // Place the comparator into high speed mode
     while (AC->STATUSB.bit.SYNCBUSY);                   // Wait for synchronization
 
@@ -188,9 +231,9 @@ void set_active_coils(bool desired_coils[NB_COILS]) {
     /**
      * @brief Set the active coils.
      * 
-     * @param desired_coils[8] Array of booleans to set the active coils. The index of the array corresponds to the coil number.
+     * @param desired_coils[NB_COILS] Array of booleans to set the active coils. The index of the array corresponds to the coil number.
     */
-    for(uint8_t i = 0; i < 8; i++) {
+    for(uint8_t i = 0; i < NB_COILS; i++) {
         active_coils[i] = desired_coils[i];
     }
 }
@@ -255,22 +298,26 @@ void tare_coil(uint8_t coil) {
      * 
      * @param coil The coil to tare.
     */
-    uint32_t capture_sum = 0;
-
     // Select the coil
     select(coil);
+    delay(5);
 
     // Acquire 10 values and average them
-    static uint32_t tries = 0;
-    for(uint8_t nb_acquisitions = 0; (nb_acquisitions < NB_TARE_ACQUI) && (tries < 10*NB_TARE_ACQUI); tries++) {
+    uint8_t nb_acquisitions = 0;
+    uint32_t capture_sum = 0;
+    for(uint32_t tries = 0; tries < 10*NB_TARE_ACQUI; tries++) {
         if(captured_value > 0) {
             capture_sum += captured_value;
             nb_acquisitions++;
-        }
-        delay(10);
-    }
 
-    meas.tare[coil] = capture_sum / (float) NB_TARE_ACQUI;
+            if(nb_acquisitions == NB_TARE_ACQUI) {
+                meas.tare[coil] = capture_sum / (float) NB_TARE_ACQUI;
+                return;}
+        }
+        delay(5);
+    }
+    if(nb_acquisitions == 0) {meas.tare[coil] = 0;}
+    else {meas.tare[coil] = capture_sum / (float) nb_acquisitions;}
 }
 
 uint8_t select_next_coil(uint8_t last_coil) {
@@ -279,14 +326,25 @@ uint8_t select_next_coil(uint8_t last_coil) {
      * 
      * @param last_coil The last coil that was pulsed.
     */
-    for(uint8_t i = 0; i < NB_COILS; i++){
-        if(active_coils[(last_coil + i) % NB_COILS]) {
-            select((last_coil + i) % NB_COILS);
-            return (last_coil + i) % NB_COILS;
+    for(uint8_t i = 1; i < NB_COILS; i++){
+        uint8_t next_coil = (last_coil + i) % NB_COILS;
+        if(active_coils[next_coil]) {
+            select(next_coil);
+            return next_coil;
         }
     }
     return 0;
 }
+
+// void start_one_shot_timer() {
+//     // Reset counter value (optional depending on whether you want a consistent delay each time)
+//     TC3->COUNT16.COUNT.reg = 0;
+//     while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
+    
+//     // Enable timer which will run for one shot due to earlier configuration 
+//     TC3->COUNT16.CTRLA.bit.ENABLE = 1;
+//     while (TC3->COUNT16.STATUS.bit.SYNCBUSY);
+// }
 
 } // namespace pulse
 
@@ -294,17 +352,27 @@ uint8_t select_next_coil(uint8_t last_coil) {
 void AC_Handler(void) {
     // Check if compare interrupt
     if(AC->INTFLAG.bit.COMP1 && AC->INTENSET.bit.COMP1) {
-        static uint8_t pulsing_coil = 0;
-
         // Read timer value
         pulse::captured_value = TC4->COUNT16.COUNT.reg;
 
         // Save the captured value
-        pulse::meas.captured_value[pulsing_coil] = pulse::captured_value;
+        pulse::meas.captured_value[pulse::pulsing_coil] = pulse::captured_value;
 
-        pulsing_coil = pulse::select_next_coil(pulsing_coil);
+        // // Start one shot timer to change coil
+        // pulse::start_one_shot_timer();
         
         // Clear interrupt flag by writing '1' to it
         AC->INTFLAG.reg = AC_INTFLAG_COMP1;
+    }
+}
+
+void TC3_Handler(void) {
+    // Check if compare interrupt
+    if(TC3->COUNT16.INTFLAG.bit.MC0 && TC3->COUNT16.INTENSET.bit.MC0) {
+        // Do something
+        pulse::pulsing_coil = pulse::select_next_coil(pulse::pulsing_coil);
+
+        // Clear interrupt flag by writing '1' to it
+        TC3->COUNT16.INTFLAG.reg = TC_INTFLAG_MC0;
     }
 }

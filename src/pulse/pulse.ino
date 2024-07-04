@@ -29,19 +29,26 @@ void setup() {
 
     bool desired_channels[pulse::NB_COILS] = {true, true, false, false, false, false, false, false};
     pulse::set_active_coils(desired_channels);
+    // pulse::set_threshold(100);
     pulse::tare();
     if(DEBUG) {SerialUSB.println("Setup complete");}
+
+    pulse::select(0);
+    SerialUSB.println(pulse::get_captured_value().tare[0]);
 }
 
 
 void loop() {
+    // SerialUSB.println("------------------------------------------------------------");
+    // SerialUSB.println("\t\tTimeShifting  \tCaptured  \tTare");
     pulse::measure meas = pulse::get_captured_value();
-    for(uint8_t i = 0; i < pulse::NB_COILS; i++) {
-        SerialUSB.print("Channel "); SerialUSB.print(i); SerialUSB.print(": ");
-        SerialUSB.print(meas.time_shifting[i]); SerialUSB.print(" ");
-        SerialUSB.print(meas.captured_value[i]); SerialUSB.print(" ");
-        SerialUSB.println(meas.tare[i]);
-    }
+    // for(uint8_t i = 0; i < pulse::NB_COILS; i++) {
+    //     SerialUSB.print("Channel "); SerialUSB.print(i); SerialUSB.print(":\t");
+    //     SerialUSB.print(meas.time_shifting[i]); SerialUSB.print("\t\t");
+    //     SerialUSB.print(meas.captured_value[i]); SerialUSB.print("\t\t");
+    //     SerialUSB.println(meas.tare[i]);
+    // }
+    SerialUSB.println(meas.captured_value[0]);
     
-    delay(1000);
+    delay(100);
 }

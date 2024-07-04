@@ -13,6 +13,7 @@ namespace pulse {
     constexpr uint16_t PULSE_FREQ_HZ = 30;      // Pulse frequency [Hz]
     constexpr uint8_t MAIN_CLK_FREQ_MHZ = 48;   // Main clock frequency [MHz]. This cannot be modified.
     constexpr uint8_t NB_TARE_ACQUI = 10;       // Number of tare acquisitions
+    constexpr uint16_t COILCHANGE_DELAY_US = 1000; // Delay between pulse and coil change [us] BUG: Strange behavior for values > 1000. If fixed, replace value by "(1000000/PULSE_FREQ_HZ - PULSE_WIDTH_US) / 2"
     
     /* Pinout
     Arduino numbering is used.
@@ -36,8 +37,9 @@ namespace pulse {
     // Function prototypes
     void setup();
     void set_active_coils(bool desired_channels[NB_COILS]);
-    void set_threshold(uint32_t threshold);
+    void set_threshold(uint32_t threshold_mv);
     void tare();
+    void select(uint8_t coil);
     struct measure get_captured_value();
 }
 
