@@ -24,6 +24,7 @@ Outputs:
 #include "src\buzz\buzz.hpp"
 #include "src\knobs\knobs.hpp"
 #include "src\pulse\pulse.hpp"
+#include "src\leds\leds.hpp"
 
 // Global variables
 bool desired_channels[pulse::NB_COILS] = {true, true, false, false, false, false, false, false};
@@ -40,6 +41,7 @@ void setup() {
     battery::setup();
     buzzer::setup();
     knobs::setup();
+    leds::setup();
     pulse::setup();
     pulse::set_active_coils(desired_channels);
     // pulse::set_threshold(100);
@@ -75,7 +77,7 @@ void loop() {
     buzzer::playMetal(highest_time_shifting, 25*pulse::MAIN_CLK_FREQ_MHZ, time_shifting_threshold, (1000/LOOP_FREQ_HZ)*0.4);
 
     // Update the display
-    // TODO
+    leds::set_from_pulse(meas.time_shifting, time_shifting_threshold, desired_channels);
 
     delay(1000/LOOP_FREQ_HZ);
 }
