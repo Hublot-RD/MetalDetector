@@ -29,10 +29,7 @@ void setup() {
     pulse::set_active_coils(desired_channels);
     // pulse::set_threshold(100);
     pulse::tare();
-    if(DEBUG) {
-        SerialUSB.println("Setup complete");
-        SerialUSB.println(pulse::get_captured_value().tare[0]);
-    }
+    if(DEBUG) {SerialUSB.println("Setup complete");}
 }
 
 

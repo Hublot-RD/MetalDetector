@@ -5,6 +5,7 @@
 // Include Arduino core library. This is often not needed in .h files,
 // but required for defining types like 'int' below.
 #include <Arduino.h>
+#include "pitches.hpp"
 
 namespace buzzer {
     // Constants

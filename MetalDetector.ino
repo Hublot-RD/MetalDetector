@@ -19,7 +19,6 @@ Outputs:
 */
 
 #include <Arduino.h>
-#include "pinout.hpp"
 #include "parameters.hpp"
 #include "src\battery\battery.hpp"
 #include "src\buzz\buzz.hpp"
@@ -27,62 +26,56 @@ Outputs:
 #include "src\pulse\pulse.hpp"
 
 // Global variables
-uint32_t tare = 0;
+bool desired_channels[pulse::NB_COILS] = {true, true, false, false, false, false, false, false};
+uint32_t time_shifting_threshold = 10;
 
 
 void setup() {
-  // Open serial communications on the native USB port
-  if(DEBUG) {SerialUSB.begin(SERIAL_BAUD_RATE);}
+    // Open serial communications on the native USB port
+    if(DEBUG) {SerialUSB.begin(SERIAL_BAUD_RATE);}
 
-  delay(STARTUP_TIME_MS);
-  
-  // Setup each library
-  battery::setup();
-  buzzer::setup();
-  pulse::setup();
-  knobs::setup();
+    delay(STARTUP_TIME_MS);
+    
+    // Setup each library
+    battery::setup();
+    buzzer::setup();
+    knobs::setup();
+    pulse::setup();
+    pulse::set_active_coils(desired_channels);
+    // pulse::set_threshold(100);
+    pulse::tare();
 
-  // Wait for sensor to be active an zero it
-  while(captured_value <= 0){
-    static uint8_t i = 1;
-    if(DEBUG) {SerialUSB.println("Waiting for captured value ...");}
-    delay(100);
-    if(i > 10){
-      if(DEBUG) {SerialUSB.println("Could not capture a value. Continuing without tare = 0.");}
-      break;
-    }
-    i++;
-  };
-  tare = captured_value;
-
-  // Play startup melody
-  // playMelodyMetallica(BUZZER_PIN);
-  buzzer::playMelodyMario();
+    // Play startup melody
+    buzzer::playMelodyMario();
 }
 
 
 void loop() {
-  static uint8_t channel = 0;
-  static uint8_t cycle_cnt = 0;
-  if (cycle_cnt >= 5*LOOP_FREQ_HZ) {
-    channel = (channel+1) % 2;
-    pulse::select(channel);
-    cycle_cnt = 0;
-  }
+    pulse::measure meas = pulse::get_captured_value();
+    // Print the captured values
+    if(DEBUG) {
+        SerialUSB.println("------------------------------------------------------------");
+        SerialUSB.println("\t\tTimeShifting  \tCaptured  \tTare");
+        for(uint8_t i = 0; i < pulse::NB_COILS; i++) {
+            SerialUSB.print("Channel "); SerialUSB.print(i); SerialUSB.print(":\t");
+            SerialUSB.print(meas.time_shifting[i]); SerialUSB.print("\t\t");
+            SerialUSB.print(meas.captured_value[i]); SerialUSB.print("\t\t");
+            SerialUSB.println(meas.tare[i]);
+        }
+    }
 
-  if (DEBUG) {
-    SerialUSB.print("Channel: "); SerialUSB.println(channel);
-    SerialUSB.print("Tare value [us]:  "); SerialUSB.println(tare/float(MAIN_CLK_FREQ_MHZ));
-    SerialUSB.print("Captured value [us]:  "); SerialUSB.println(captured_value/float(MAIN_CLK_FREQ_MHZ));
-  }
+    uint32_t highest_time_shifting = meas.time_shifting[0];
+    for(uint8_t i = 0; i < pulse::NB_COILS; i++) {
+        if(meas.time_shifting[i] > highest_time_shifting) {
+            highest_time_shifting = meas.time_shifting[i];
+        }
+    }
 
-  // Compute time shifting
-  uint32_t time_shifting = 0;
-  if(captured_value > tare) {time_shifting = captured_value - tare;}
+    // Play sound
+    buzzer::playMetal(highest_time_shifting, 25*pulse::MAIN_CLK_FREQ_MHZ, time_shifting_threshold, (1000/LOOP_FREQ_HZ)*0.4);
 
-  // Play sound
-  buzzer::playMetal(time_shifting, 25*MAIN_CLK_FREQ_MHZ, 10, (1000/LOOP_FREQ_HZ)*0.4);
+    // Update the display
+    // TODO
 
-  cycle_cnt++;
-  delay(1000/LOOP_FREQ_HZ);
+    delay(1000/LOOP_FREQ_HZ);
 }

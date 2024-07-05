@@ -1,5 +1,4 @@
 #include "buzz.hpp"
-#include "pitches.hpp"
 
 
 #define DURATION2MS(duration)   (60000 * 4) / (BPM * duration)
