@@ -39,7 +39,6 @@ namespace pulse {
     void set_active_coils(bool desired_channels[NB_COILS]);
     void set_threshold(uint32_t threshold_mv);
     void tare();
-    void select(uint8_t coil);
     struct measure get_captured_value();
 }
 

@@ -119,8 +119,6 @@ void setup() {
 
     // TC3 Timer ///////////////////////////////////////////////////////////////////////////////
 
-    // TC3->COUNT16.CTRLA.bit.PRESCALER |= TC_CTRLA_PRESCALER_DIV1024_Val;   // Divide 48MHz clock by 1024 => ~48KHz
-
     TC3->COUNT16.CTRLA.reg = TC_CTRLA_MODE_COUNT16;   // Configure TC3 timer for 16-bit mode
     while(TC3->COUNT16.STATUS.bit.SYNCBUSY);          // Wait for synchronization
 
@@ -272,8 +270,19 @@ void tare() {
     /**
      * @brief Tare all active the coils.
     */
+    // Save active coil list
+    bool active_coils_saved[NB_COILS];
     for(uint8_t i = 0; i < NB_COILS; i++) {
-        if(active_coils[i]) {tare_coil(i);}
+        active_coils_saved[i] = active_coils[i];
+    }
+
+    for(uint8_t i = 0; i < NB_COILS; i++) {
+        if(active_coils_saved[i]) {tare_coil(i);}
+    }
+
+    // Restore active coil list
+    for(uint8_t i = 0; i < NB_COILS; i++) {
+        active_coils[i] = active_coils_saved[i];
     }
 }
 
@@ -299,7 +308,11 @@ void tare_coil(uint8_t coil) {
      * @param coil The coil to tare.
     */
     // Select the coil
-    select(coil);
+    bool tmp_active_coils[NB_COILS];
+    for(uint8_t i = 0; i < NB_COILS; i++) {
+        tmp_active_coils[i] = coil == i;
+    }
+    set_active_coils(tmp_active_coils);
     delay(5);
 
     // Acquire 10 values and average them
@@ -336,16 +349,6 @@ uint8_t select_next_coil(uint8_t last_coil) {
     return 0;
 }
 
-// void start_one_shot_timer() {
-//     // Reset counter value (optional depending on whether you want a consistent delay each time)
-//     TC3->COUNT16.COUNT.reg = 0;
-//     while(TC3->COUNT16.STATUS.bit.SYNCBUSY);
-    
-//     // Enable timer which will run for one shot due to earlier configuration 
-//     TC3->COUNT16.CTRLA.bit.ENABLE = 1;
-//     while (TC3->COUNT16.STATUS.bit.SYNCBUSY);
-// }
-
 } // namespace pulse
 
 // Interrupt handler for the Analog Comparator. Must be outside of any namespace
@@ -357,9 +360,6 @@ void AC_Handler(void) {
 
         // Save the captured value
         pulse::meas.captured_value[pulse::pulsing_coil] = pulse::captured_value;
-
-        // // Start one shot timer to change coil
-        // pulse::start_one_shot_timer();
         
         // Clear interrupt flag by writing '1' to it
         AC->INTFLAG.reg = AC_INTFLAG_COMP1;
