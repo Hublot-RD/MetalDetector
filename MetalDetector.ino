@@ -79,5 +79,20 @@ void loop() {
     // Update the display
     leds::set_from_pulse(meas.time_shifting, time_shifting_threshold, desired_channels);
 
+    // Update according to knobs
+    pulse::set_threshold(knobs::get_threshold());
+    time_shifting_threshold = knobs::get_sensitivity();
+    if(DEBUG) {
+        SerialUSB.print("Sensitivity: "); SerialUSB.println(time_shifting_threshold);
+        SerialUSB.print("Threshold: "); SerialUSB.println(knobs::get_threshold());
+    }
+
+    // Tare if necessary
+    if(knobs::tare_needed) {
+        pulse::tare();
+        knobs::tare_needed = false;
+        if(DEBUG) {SerialUSB.println("Tare done");}
+    }
+
     delay(1000/LOOP_FREQ_HZ);
 }

@@ -10,6 +10,11 @@ namespace knobs {
     constexpr uint8_t MODE_PIN =            11;          // Pin for the mode button
     constexpr uint8_t ZERO_PIN =            10;          // Pin for the zero button
 
+    // Global variables declaration
+    extern uint32_t sensitivity;
+    extern uint32_t threshold;
+    extern bool tare_needed;
+
     // Function prototypes
     void setup(void);
     int get_sensitivity();

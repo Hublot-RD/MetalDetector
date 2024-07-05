@@ -5,6 +5,11 @@ namespace knobs {
 const u_int8_t MODE_EXTINT_NUMB = 0; // External interrupt number for the mode pushbutton. From SAMD21G18A datasheet, table 7-1
 const u_int8_t ZERO_EXTINT_NUMB = 5; // External interrupt number for the zero pushbutton. From SAMD21G18A datasheet, table 7-1
 
+// Global variables definition
+uint32_t sensitivity = 0;
+uint32_t threshold = 0;
+bool tare_needed = false;
+
 void setup() {
     // Disable interrupts
     __disable_irq();
@@ -112,7 +117,7 @@ void mode_handler() {
 
 void zero_handler() {
     // Zero button was pressed
-    SerialUSB.println("Zero button pressed");
+    tare_needed = true;
 }
 
 } // namespace knobs
