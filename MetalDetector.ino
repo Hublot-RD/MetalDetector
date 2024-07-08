@@ -90,11 +90,11 @@ void loop() {
     }
 
     // Update according to knobs
-    pulse::set_threshold(knobs::get_threshold());
+    uint16_t thrsh = pulse::set_threshold(knobs::get_threshold());
     time_shifting_threshold = knobs::get_sensitivity();
     if(DEBUG) {
         SerialUSB.print("Sensitivity: "); SerialUSB.println(time_shifting_threshold);
-        SerialUSB.print("Threshold: "); SerialUSB.println(knobs::get_threshold());
+        SerialUSB.print("Threshold: "); SerialUSB.println(thrsh);
     }
     if(knobs::mode_button_pressed) {
         mode = (mode + 1) % 2;

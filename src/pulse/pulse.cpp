@@ -16,6 +16,7 @@ uint8_t pulsing_coil = 0;
 void select(uint8_t channel);
 uint8_t select_next_coil(uint8_t last_coil);
 void tare_coil(uint8_t coil);
+uint16_t map_threshold(uint16_t threshold);
 
 // Function definitions
 void setup() {
@@ -252,18 +253,35 @@ struct measure get_captured_value() {
     return meas;
 }
 
-void set_threshold(uint32_t threshold_mv) {
+uint16_t set_threshold(uint32_t threshold_mv) {
     /**
      * @brief Set the threshold.
      * 
      * @param threshold The threshold to set, in mV. 10 bit resolution on 1000mV.
     */
-    uint16_t threshold = threshold_mv * 1024 / 1000;
+    uint16_t threshold = map_threshold(threshold_mv);
 
     // Set the threshold
     DAC->DATA.reg = DAC_DATA_DATA(threshold);
     // Wait for synchronization
     while(DAC->STATUS.bit.SYNCBUSY);
+
+    return threshold;
+}
+
+uint16_t map_threshold(uint16_t threshold) {
+    /**
+     * @brief Map the threshold value to the 10 bit resolution.
+     * 
+     * @param threshold The threshold to map.
+     * @return uint16_t The mapped threshold.
+    */
+    uint16_t tmp = threshold;
+
+    if(tmp > MAX_THRESHOLD_MV) {threshold = MAX_THRESHOLD_MV;}
+    if(tmp < MIN_THRESHOLD_MV) {threshold = MIN_THRESHOLD_MV;}
+
+    return tmp;
 }
 
 void tare() {
