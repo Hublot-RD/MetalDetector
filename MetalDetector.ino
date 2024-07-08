@@ -30,6 +30,8 @@ Outputs:
 bool desired_channels[pulse::NB_COILS] = {true, false, false, false, false, false, false, false};
 uint32_t time_shifting_threshold = 10;
 
+// Function prototypes
+void apply_mode(uint8_t mode);
 
 void setup() {
     // Open serial communications on the native USB port
@@ -53,7 +55,10 @@ void setup() {
 
 
 void loop() {
+    // Define static variables
     static uint8_t display_should_stay_x_cycles = 0; // Number of cycles the display should stay on the current state. Used when changing the mode or taring
+    static uint8_t mode = 0; // 0: normal mode, 1: battery level, 2: mode selection
+
     pulse::measure meas = pulse::get_captured_value();
     // Print the captured values
     if(DEBUG) {
@@ -91,6 +96,11 @@ void loop() {
         SerialUSB.print("Sensitivity: "); SerialUSB.println(time_shifting_threshold);
         SerialUSB.print("Threshold: "); SerialUSB.println(knobs::get_threshold());
     }
+    if(knobs::mode_button_pressed) {
+        mode = (mode + 1) % 2;
+        apply_mode(mode, &display_should_stay_x_cycles);
+        knobs::mode_button_pressed = false;
+    }
 
     // Tare if necessary
     if(knobs::tare_needed) {
@@ -102,4 +112,33 @@ void loop() {
     }
 
     delay(1000/LOOP_FREQ_HZ);
+}
+
+void apply_mode(uint8_t mode, uint8_t *display_should_stay_x_cycles) {
+    /**
+     * @brief Apply a mode to the system
+     * 
+     * @param mode: Mode to apply
+     */
+    if(mode > 7) {return;} // Invalid mode
+
+    switch(mode) {
+        case 0:
+            // Single coil mode
+            for (uint8_t i = 0; i < pulse::NB_COILS; i++) {
+                desired_channels[i] = (i == 0) ? true : false;
+            }
+            break;
+        case 1:
+            // Dual coil mode
+            for (uint8_t i = 0; i < pulse::NB_COILS; i++) {
+                desired_channels[i] = (i == 0 || i == 1) ? true : false;
+            }
+            break;
+        default:
+            break;
+    }
+    *display_should_stay_x_cycles = 1*LOOP_FREQ_HZ;
+    leds::set_mode(mode);
+    pulse::set_active_coils(desired_channels);
 }

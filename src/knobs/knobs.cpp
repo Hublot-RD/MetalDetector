@@ -9,6 +9,7 @@ const u_int8_t ZERO_EXTINT_NUMB = 5; // External interrupt number for the zero p
 uint32_t sensitivity = 0;
 uint32_t threshold = 0;
 bool tare_needed = false;
+bool mode_button_pressed = false;
 
 void setup() {
     // Disable interrupts
@@ -112,7 +113,7 @@ int get_threshold() {
 
 void mode_handler() {
     // Mode button was pressed
-    SerialUSB.println("Mode button pressed");
+    mode_button_pressed = true;
 }
 
 void zero_handler() {

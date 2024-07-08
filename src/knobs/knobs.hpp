@@ -14,6 +14,7 @@ namespace knobs {
     extern uint32_t sensitivity;
     extern uint32_t threshold;
     extern bool tare_needed;
+    extern bool mode_button_pressed;
 
     // Function prototypes
     void setup(void);

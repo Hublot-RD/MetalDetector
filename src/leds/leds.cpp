@@ -45,6 +45,19 @@ void set_tare() {
     FastLED.show();
 }
 
+void set_mode(uint8_t mode){
+    /**
+     * @brief Set the LEDs color based on the mode
+     * 
+     * @param mode: Mode to set
+    */
+    for(uint8_t i = 0; i < NUM_LEDS; i++) {
+        if(NUM_LEDS - i - 1 == mode) {led_stick[i] = BLUE;} 
+        else {led_stick[i] = BLACK;}
+    }
+    FastLED.show();
+}
+
 void set(uint8_t channel, CHSV color) {
     /**
      * @brief Set the color of a specific LED

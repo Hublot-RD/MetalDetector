@@ -24,6 +24,7 @@ namespace leds {
     void setup(void);
     void set_from_pulse(uint32_t time_shifting[NUM_LEDS], uint32_t threshold, bool active_coils[NUM_LEDS]);
     void set_tare();
+    void set_mode(uint8_t mode);
     void set(uint8_t channel, CHSV color);
     void animate(void);
     
