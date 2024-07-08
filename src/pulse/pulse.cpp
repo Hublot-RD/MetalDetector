@@ -288,20 +288,15 @@ void tare() {
     /**
      * @brief Tare all active the coils.
     */
-    // Save active coil list
-    bool active_coils_saved[NB_COILS];
-    for(uint8_t i = 0; i < NB_COILS; i++) {
-        active_coils_saved[i] = active_coils[i];
-    }
+    // Disable automatic coil selection
+    TC3->COUNT16.EVCTRL.bit.TCEI = 0;   // Disable input event so the timer will not be triggered
 
     for(uint8_t i = 0; i < NB_COILS; i++) {
-        if(active_coils_saved[i]) {tare_coil(i);}
+        if(active_coils[i]) {tare_coil(i);}
     }
 
-    // Restore active coil list
-    for(uint8_t i = 0; i < NB_COILS; i++) {
-        active_coils[i] = active_coils_saved[i];
-    }
+    // Enable automatic coil selection
+    TC3->COUNT16.EVCTRL.bit.TCEI = 1;   // Enable input event so the timer will be triggered
 }
 
 void select(uint8_t coil) {
@@ -326,29 +321,9 @@ void tare_coil(uint8_t coil) {
      * @param coil The coil to tare.
     */
     // Select the coil
-    bool tmp_active_coils[NB_COILS];
-    for(uint8_t i = 0; i < NB_COILS; i++) {
-        tmp_active_coils[i] = coil == i;
-    }
-    set_active_coils(tmp_active_coils);
-    delay(5);
-
-    // Acquire 10 values and average them
-    uint8_t nb_acquisitions = 0;
-    uint32_t capture_sum = 0;
-    for(uint32_t tries = 0; tries < 10*NB_TARE_ACQUI; tries++) {
-        if(captured_value > 0) {
-            capture_sum += captured_value;
-            nb_acquisitions++;
-
-            if(nb_acquisitions == NB_TARE_ACQUI) {
-                meas.tare[coil] = capture_sum / (float) NB_TARE_ACQUI;
-                return;}
-        }
-        delay(5);
-    }
-    if(nb_acquisitions == 0) {meas.tare[coil] = 0;}
-    else {meas.tare[coil] = capture_sum / (float) nb_acquisitions;}
+    select(coil);
+    delay(100);
+    meas.tare[coil] = captured_value;
 }
 
 uint8_t select_next_coil(uint8_t last_coil) {
