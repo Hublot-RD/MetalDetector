@@ -16,12 +16,14 @@ namespace leds {
     #define RED   CHSV(HSVHue::HUE_RED, 255, BRIGHTNESS)
     #define GREEN CHSV(HSVHue::HUE_GREEN, 255, BRIGHTNESS)
     #define BLUE  CHSV(HSVHue::HUE_BLUE, 255, BRIGHTNESS)
+    #define YELLOW CHSV(HSVHue::HUE_YELLOW, 255, BRIGHTNESS)
     #define WHITE CHSV(0, 0, BRIGHTNESS)
     #define BLACK CHSV(0, 0, 0)
 
     // Function prototypes
     void setup(void);
     void set_from_pulse(uint32_t time_shifting[NUM_LEDS], uint32_t threshold, bool active_coils[NUM_LEDS]);
+    void set_tare();
     void set(uint8_t channel, CHSV color);
     void animate(void);
     

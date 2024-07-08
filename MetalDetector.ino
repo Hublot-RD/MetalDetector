@@ -27,7 +27,7 @@ Outputs:
 #include "src\leds\leds.hpp"
 
 // Global variables
-bool desired_channels[pulse::NB_COILS] = {true, true, false, false, false, false, false, false};
+bool desired_channels[pulse::NB_COILS] = {true, false, false, false, false, false, false, false};
 uint32_t time_shifting_threshold = 10;
 
 
@@ -53,6 +53,7 @@ void setup() {
 
 
 void loop() {
+    static uint8_t display_should_stay_x_cycles = 0; // Number of cycles the display should stay on the current state. Used when changing the mode or taring
     pulse::measure meas = pulse::get_captured_value();
     // Print the captured values
     if(DEBUG) {
@@ -77,7 +78,11 @@ void loop() {
     buzzer::playMetal(highest_time_shifting, 25*pulse::MAIN_CLK_FREQ_MHZ, time_shifting_threshold, (1000/LOOP_FREQ_HZ)*0.4);
 
     // Update the display
-    leds::set_from_pulse(meas.time_shifting, time_shifting_threshold, desired_channels);
+    if(display_should_stay_x_cycles > 0) {
+        display_should_stay_x_cycles--;
+    } else {
+        leds::set_from_pulse(meas.time_shifting, time_shifting_threshold, desired_channels);
+    }
 
     // Update according to knobs
     pulse::set_threshold(knobs::get_threshold());
@@ -89,6 +94,8 @@ void loop() {
 
     // Tare if necessary
     if(knobs::tare_needed) {
+        display_should_stay_x_cycles = 1*LOOP_FREQ_HZ;
+        leds::set_tare();
         pulse::tare();
         knobs::tare_needed = false;
         if(DEBUG) {SerialUSB.println("Tare done");}

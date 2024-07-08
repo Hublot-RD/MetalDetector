@@ -35,6 +35,16 @@ void set_from_pulse(uint32_t time_shifting[NUM_LEDS], uint32_t threshold, bool a
     FastLED.show();
 }
 
+void set_tare() {
+    /**
+     * @brief Set the LEDs color to white
+    */
+    for (uint8_t i = 0; i < NUM_LEDS; i++) {
+        led_stick[i] = YELLOW;
+    }
+    FastLED.show();
+}
+
 void set(uint8_t channel, CHSV color) {
     /**
      * @brief Set the color of a specific LED
