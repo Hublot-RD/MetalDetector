@@ -74,7 +74,7 @@ void loop() {
 
     uint32_t highest_time_shifting = meas.time_shifting[0];
     for(uint8_t i = 0; i < pulse::NB_COILS; i++) {
-        if(meas.time_shifting[i] > highest_time_shifting) {
+        if(meas.time_shifting[i] > highest_time_shifting && desired_channels[i]) {
             highest_time_shifting = meas.time_shifting[i];
         }
     }
