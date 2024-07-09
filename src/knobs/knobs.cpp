@@ -95,11 +95,15 @@ void setup() {
 
 int get_sensitivity() {
     /**
-     * @brief Get the value of the sensitivity potentiometer.
+     * @brief Get the value of the sensitivity according to potentiometer.
      * 
-     * @return int The value of the sensitivity potentiometer. Range: 0-1023
+     * @return int The value of the sensitivity, in us. Range: MIN_SENSITIVITY to MAX_SENSITIVITY
     */
-    return analogRead(SENSITIVITY_PIN);
+    int tmp = analogRead(SENSITIVITY_PIN)/1023.0 * MAX_SENSITIVITY;
+    if(tmp < MIN_SENSITIVITY) {
+        return MIN_SENSITIVITY;
+    }
+    return tmp;
 }
 
 int get_threshold() {
