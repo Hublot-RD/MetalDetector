@@ -46,7 +46,8 @@ void setup() {
     leds::setup();
     pulse::setup();
     pulse::set_active_coils(desired_channels);
-    // pulse::set_threshold(100);
+    pulse::set_threshold(knobs::get_threshold());
+    delay(100);
     pulse::tare();
 
     // Play startup melody
