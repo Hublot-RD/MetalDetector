@@ -13,7 +13,7 @@ volatile uint32_t captured_value = 0;
 uint8_t pulsing_coil = 0;
 
 // Private functions prototypes
-void setup_AC();
+void setup_AC(bool with_filter = false);
 void setup_DAC();
 void setup_EVSYS();
 void setup_TCC0();
@@ -59,7 +59,7 @@ void setup() {
     setup_TCC0();
     setup_TC3();
     setup_TC4();
-    setup_AC();
+    setup_AC(AC_USE_FILTER);
     setup_DAC();
 
     // Enable interrupts
@@ -132,7 +132,7 @@ void tare() {
 //////////////////////////////////////
 //////////////////////////////////////
 
-void setup_AC() {
+void setup_AC(bool with_filter) {
     /**
      * @brief Setup the Analog Comparator.
     */
@@ -144,10 +144,26 @@ void setup_AC() {
                         GCLK_CLKCTRL_GEN_GCLK1 |     
                         GCLK_CLKCTRL_ID_AC_ANA;   
     while (GCLK->STATUS.bit.SYNCBUSY);               // Wait for synchronization
-    GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN |         // Route the 48MHz GCLK0 to the Analog Comparator digital clock
-                        GCLK_CLKCTRL_GEN_GCLK0 |     // This is the main clock of the AC (used for filtering for example)
-                        GCLK_CLKCTRL_ID_AC_DIG;   
-    while (GCLK->STATUS.bit.SYNCBUSY);               // Wait for synchronization
+    if(with_filter) {
+        GCLK->GENCTRL.reg = GCLK_GENCTRL_GENEN |         // Enable the generic clock generator 3
+                            GCLK_GENCTRL_SRC_DFLL48M |   // Set the source to the 48MHz clock
+                            GCLK_GENCTRL_ID(3);          // Set the ID of the generic clock generator 3
+        while (GCLK->STATUS.bit.SYNCBUSY);               // Wait for synchronization
+
+        GCLK->GENDIV.reg = GCLK_GENDIV_DIV(AC_FILTER_DIV) | // Divide the 48MHz clock by a given factor
+                            GCLK_GENDIV_ID(3);           // Set the ID of the generic clock generator 3
+        while (GCLK->STATUS.bit.SYNCBUSY);               // Wait for synchronization
+
+        GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN |         // Route the custom frequency GCLK3 to the Analog Comparator digital clock
+                            GCLK_CLKCTRL_GEN_GCLK3 |     // This is the main clock of the AC (used for filtering for example)
+                            GCLK_CLKCTRL_ID_AC_DIG;   
+        while (GCLK->STATUS.bit.SYNCBUSY);               // Wait for synchronization
+    } else {
+        GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN |         // Route the 48MHz GCLK0 to the Analog Comparator digital clock
+                            GCLK_CLKCTRL_GEN_GCLK0 |     // This is the main clock of the AC (used for filtering for example)
+                            GCLK_CLKCTRL_ID_AC_DIG;   
+        while (GCLK->STATUS.bit.SYNCBUSY);               // Wait for synchronization
+    }
 
     // PORT: Configure port and pins
     PORT->Group[g_APinDescription[SIGNAL_PIN].ulPort].PINCFG[g_APinDescription[SIGNAL_PIN].ulPin].bit.PMUXEN = 1;                   // Enable PORT multiplexer
@@ -158,12 +174,24 @@ void setup_AC() {
     }
 
     // Analog Comparator: Configure the analog comparator
-    AC->COMPCTRL[1].reg = AC_COMPCTRL_OUT_ASYNC |       // Enable comparator output in asynchronous mode
-                        AC_COMPCTRL_MUXPOS_PIN1 |     // Set the positive input multiplexer to pin 1
-                        AC_COMPCTRL_MUXNEG_DAC |      // Set the negative input multiplexer to the voltage scaler
-                        AC_COMPCTRL_INTSEL_FALLING |  // Generate interrupts only on falling edge of AC output
-                        AC_COMPCTRL_SPEED_HIGH;       // Place the comparator into high speed mode
-    while (AC->STATUSB.bit.SYNCBUSY);                   // Wait for synchronization
+    if(with_filter) {
+        AC->COMPCTRL[1].reg = AC_COMPCTRL_OUT_SYNC |        // Enable comparator output in synchronous mode (including filtering)
+                              AC_COMPCTRL_FLEN_MAJ5 |       // Set the filter length to 5
+                              AC_COMPCTRL_MUXNEG_DAC |      // Set the negative input multiplexer to the voltage scaler
+                              AC_COMPCTRL_MUXPOS_PIN1 |     // Set the positive input multiplexer to pin 1
+                              AC_COMPCTRL_INTSEL_FALLING |  // Generate interrupts only on falling edge of AC output
+                              AC_COMPCTRL_SPEED_HIGH;       // Place the comparator into high speed mode
+        while (AC->STATUSB.bit.SYNCBUSY);                   // Wait for synchronization
+    }
+    else {
+        AC->COMPCTRL[1].reg = AC_COMPCTRL_OUT_ASYNC |       // Enable comparator output in asynchronous mode
+                              AC_COMPCTRL_FLEN_OFF |        // Disable the filter
+                              AC_COMPCTRL_MUXPOS_PIN1 |     // Set the positive input multiplexer to pin 1
+                              AC_COMPCTRL_MUXNEG_DAC |      // Set the negative input multiplexer to the voltage scaler
+                              AC_COMPCTRL_INTSEL_FALLING |  // Generate interrupts only on falling edge of AC output
+                              AC_COMPCTRL_SPEED_HIGH;       // Place the comparator into high speed mode
+        while (AC->STATUSB.bit.SYNCBUSY);                   // Wait for synchronization
+    }
 
     AC->INTENSET.bit.COMP1 |= 1;        // Enable interrupt for AC1
     while (AC->STATUSB.bit.SYNCBUSY);   // Wait for synchronization
