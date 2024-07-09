@@ -276,10 +276,10 @@ uint16_t map_threshold(uint16_t threshold) {
      * @param threshold The threshold to map.
      * @return uint16_t The mapped threshold.
     */
-    uint16_t tmp = threshold;
+    uint16_t tmp = (1023 - threshold)/1023.0 * MAX_THRESHOLD_MV + MIN_THRESHOLD_MV;
 
-    if(tmp > MAX_THRESHOLD_MV) {threshold = MAX_THRESHOLD_MV;}
-    if(tmp < MIN_THRESHOLD_MV) {threshold = MIN_THRESHOLD_MV;}
+    if(tmp > MAX_THRESHOLD_MV) {tmp = MAX_THRESHOLD_MV;}
+    if(tmp < MIN_THRESHOLD_MV) {tmp = MIN_THRESHOLD_MV;}
 
     return tmp;
 }

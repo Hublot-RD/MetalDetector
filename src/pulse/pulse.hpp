@@ -15,7 +15,8 @@ namespace pulse {
     constexpr uint8_t NB_TARE_ACQUI = 10;       // Number of tare acquisitions
     constexpr uint16_t COILCHANGE_DELAY_US = 1000; // Delay between pulse and coil change [us] BUG: Strange behavior for values > 1000. If fixed, replace value by "(1000000/PULSE_FREQ_HZ - PULSE_WIDTH_US) / 2"
     constexpr uint16_t MIN_THRESHOLD_MV = 50;  // Minimum threshold value
-    constexpr uint16_t MAX_THRESHOLD_MV = 1023; // Maximum threshold value
+    constexpr uint16_t MAX_THRESHOLD_MV = 300; // Maximum threshold value
+    
     /* Pinout
     Arduino numbering is used.
     Not any value can be used, so better to keep these ones or check chap. 7 of SAMD21G18A datasheet.
