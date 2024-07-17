@@ -30,8 +30,8 @@ float read(uint8_t channel) {
 
   int measurement = analogRead(VBAT_PIN);
 
-  if(channel == 5) {voltage = measurement/1024.0 * 36.3;}
-  else if(channel == 0) {voltage = measurement/1024.0 * 7.6;} // because voltage divider is inverted
+  if(channel == V_TOTAL) {voltage = measurement/1024.0 * 35.8;}
+  else if(channel == V_CELL_1) {voltage = measurement/1024.0 * 7.6;} // because voltage divider is inverted
   else {voltage = measurement/1024.0 * 4.2;}
 
   return voltage;
