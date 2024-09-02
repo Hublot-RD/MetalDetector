@@ -109,7 +109,7 @@ void loop() {
     //     SerialUSB.print("Threshold: "); SerialUSB.println(thrsh);
     // }
     if(knobs::mode_button_pressed) {
-        mode = (mode + 1) % 2;
+        mode = (mode + 1) % 4;
         apply_mode(mode, &display_should_stay_x_cycles);
         knobs::mode_button_pressed = false;
     }
@@ -151,6 +151,12 @@ void apply_mode(uint8_t mode, uint8_t *display_should_stay_x_cycles) {
             // Inner coil mode
             for (uint8_t i = 0; i < pulse::NB_COILS; i++) {
                 desired_channels[i] = (i == 1 || i == 2 || i == 3) ? true : false;
+            }
+            break;
+        case 3:
+            // Inner coil mode
+            for (uint8_t i = 0; i < pulse::NB_COILS; i++) {
+                desired_channels[i] = (i == 1) ? true : false;
             }
             break;
         default:
