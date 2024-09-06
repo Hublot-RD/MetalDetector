@@ -7,6 +7,7 @@ namespace knobs {
     // Constants
     constexpr uint32_t MAX_SENSITIVITY = 48*3;            // Maximum value of the sensitivity potentiometer
     constexpr uint32_t MIN_SENSITIVITY = 0;               // Minimum value of the sensitivity potentiometer
+    constexpr uint32_t SENSITIVITY_NOCROSSTALK = 10000;    // Sensitivity value to avoid crosstalk
 
     // Pinout
     constexpr uint8_t SENSITIVITY_PIN =     21;          // Pin for the sensitivity potentiometer

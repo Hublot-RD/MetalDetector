@@ -21,7 +21,7 @@ void set_from_pulse(uint32_t time_shifting[NUM_LEDS], uint32_t threshold, bool a
      * @param active_coils: Array of active coils. Inactive coils are set to black
     */
     for (uint8_t i = 0; i < NUM_LEDS; i++) {
-        uint8_t coil = NUM_LEDS - i - 1;
+        uint8_t coil = i;//NUM_LEDS - i - 1;
         if(!active_coils[coil]) {
             led_stick[i] = BLACK;
             continue;

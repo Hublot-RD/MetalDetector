@@ -9,7 +9,6 @@ namespace pulse {
 // Global variables definition
 bool active_coils[NB_COILS];
 measure meas;
-volatile uint32_t captured_value = 0;
 uint8_t pulsing_coil = 0;
 
 // Private functions prototypes
@@ -100,6 +99,7 @@ uint16_t set_threshold(uint32_t threshold_mv) {
      * @param threshold The threshold to set, in mV. 10 bit resolution on 1000mV.
     */
     uint16_t threshold = map_threshold(threshold_mv);
+    // uint16_t threshold = 50;
 
     // Set the threshold
     DAC->DATA.reg = DAC_DATA_DATA(threshold);
@@ -146,7 +146,7 @@ void setup_AC(bool with_filter) {
     while (GCLK->STATUS.bit.SYNCBUSY);               // Wait for synchronization
     if(with_filter) {
         GCLK->GENCTRL.reg = GCLK_GENCTRL_GENEN |         // Enable the generic clock generator 3
-                            GCLK_GENCTRL_SRC_DFLL48M |   // Set the source to the 48MHz clock
+                            GCLK_GENCTRL_SRC_OSC8M |   // Set the source to the 48MHz clock
                             GCLK_GENCTRL_ID(3);          // Set the ID of the generic clock generator 3
         while (GCLK->STATUS.bit.SYNCBUSY);               // Wait for synchronization
 
@@ -407,7 +407,13 @@ void tare_coil(uint8_t coil) {
     // Select the coil
     select(coil);
     delay(100);
-    meas.tare[coil] = captured_value;
+    
+    uint16_t tare = 0;
+    for(uint8_t i = 0; i < NB_TARE_ACQUI; i++) {
+        tare += meas.captured_value[coil];
+        delay(10);
+    }
+    meas.tare[coil] = tare / NB_TARE_ACQUI;
 }
 
 uint8_t select_next_coil(uint8_t last_coil) {
@@ -423,7 +429,7 @@ uint8_t select_next_coil(uint8_t last_coil) {
             return next_coil;
         }
     }
-    return 0;
+    return last_coil;
 }
 
 } // namespace pulse
@@ -434,11 +440,17 @@ uint8_t select_next_coil(uint8_t last_coil) {
 void AC_Handler(void) {
     // Check if compare interrupt
     if(AC->INTFLAG.bit.COMP1 && AC->INTENSET.bit.COMP1) {
-        // Read timer value
-        pulse::captured_value = TC4->COUNT16.COUNT.reg;
-
         // Save the captured value
-        pulse::meas.captured_value[pulse::pulsing_coil] = pulse::captured_value;
+        pulse::meas.captured_value[pulse::pulsing_coil] = TC4->COUNT16.COUNT.reg;
+
+        // Stop the timer if captured value is greater than the threshold
+        // if(pulse::meas.captured_value[pulse::pulsing_coil] > 100) {
+        //     // Set timer value to the max
+        //     TC4->COUNT16.COUNT.reg = 0xFFFF;
+        // }
+
+        // TODO: Check how many time the interrupt is triggered. If it is triggered more than once, it means that the above method is not working properly
+        // Without checking above, it does not detect high values anymore.
         
         // Clear interrupt flag by writing '1' to it
         AC->INTFLAG.reg = AC_INTFLAG_COMP1;

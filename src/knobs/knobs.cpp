@@ -99,9 +99,12 @@ int get_sensitivity() {
      * 
      * @return int The value of the sensitivity, in us. Range: MIN_SENSITIVITY to MAX_SENSITIVITY
     */
-    int tmp = analogRead(SENSITIVITY_PIN)/1023.0 * MAX_SENSITIVITY;
+    int tmp = MAX_SENSITIVITY - analogRead(SENSITIVITY_PIN)/1023.0 * MAX_SENSITIVITY;
     if(tmp < MIN_SENSITIVITY) {
         return MIN_SENSITIVITY;
+    }
+    if(tmp > MAX_SENSITIVITY*0.9) {
+        return SENSITIVITY_NOCROSSTALK;
     }
     return tmp;
 }

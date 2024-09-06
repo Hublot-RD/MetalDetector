@@ -9,12 +9,12 @@ namespace pulse {
     
     // Constants
     constexpr uint8_t NB_COILS = 8;             // Number of coils
-    constexpr uint16_t PULSE_WIDTH_US = 200;    // Length of a pulse [us]
+    constexpr uint16_t PULSE_WIDTH_US = 600;    // Length of a pulse [us]
     constexpr uint16_t PULSE_FREQ_HZ = 30;      // Pulse frequency [Hz]
     constexpr uint8_t MAIN_CLK_FREQ_MHZ = 48;   // Main clock frequency [MHz]. This cannot be modified.
-    constexpr bool AC_USE_FILTER = true;           // Use the AC filter
+    constexpr bool AC_USE_FILTER = false;           // Use the AC filter
     constexpr uint8_t AC_FILTER_DIV = 1;        // Clock division factor for the AC filter
-    constexpr uint8_t NB_TARE_ACQUI = 10;       // Number of tare acquisitions
+    constexpr uint8_t NB_TARE_ACQUI = 16;       // Number of tare acquisitions
     constexpr uint16_t COILCHANGE_DELAY_US = 1000; // Delay between pulse and coil change [us] BUG: Strange behavior for values > 1000. If fixed, replace value by "(1000000/PULSE_FREQ_HZ - PULSE_WIDTH_US) / 2"
     constexpr uint16_t MIN_THRESHOLD_MV = 50;  // Minimum threshold value
     constexpr uint16_t MAX_THRESHOLD_MV = 300; // Maximum threshold value

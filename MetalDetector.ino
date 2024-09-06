@@ -50,7 +50,7 @@ void setup() {
     pulse::set_active_coils(desired_channels);
     // pulse::set_threshold(knobs::get_threshold());
     // SerialUSB.println(pulse::set_threshold(1023));
-    delay(100);
+    delay(1000);
     pulse::tare();
 
     // Play startup melody
@@ -66,25 +66,20 @@ void loop() {
 
     pulse::measure meas = pulse::get_captured_value();
     // battery_voltage = FILTER_CST * battery_voltage + (1 - FILTER_CST) * battery::read(battery::V_TOTAL);
-    // if(DEBUG) {
-    //     SerialUSB.print(meas.captured_value[0]);
-    //     SerialUSB.print(", ");
-    //     SerialUSB.println(battery_voltage);
-    // }
     // Print the captured values
-    // if(DEBUG) {
-    //     SerialUSB.println("------------------------------------------------------------");
-    //     SerialUSB.println("\t\tTimeShifting  \tCaptured  \tTare");
-    //     for(uint8_t i = 0; i < pulse::NB_COILS; i++) {
-    //         SerialUSB.print("Channel "); SerialUSB.print(i); SerialUSB.print(":\t");
-    //         SerialUSB.print(meas.time_shifting[i]); SerialUSB.print("\t\t");
-    //         SerialUSB.print(meas.captured_value[i]); SerialUSB.print("\t\t");
-    //         SerialUSB.println(meas.tare[i]);
-    //     }
-    // }
+    if(DEBUG) {
+        SerialUSB.println("------------------------------------------------------------");
+        SerialUSB.println("\t\tTimeShifting  \tCaptured  \tTare");
+        for(uint8_t i = 0; i < pulse::NB_COILS; i++) {
+            SerialUSB.print("Channel "); SerialUSB.print(i); SerialUSB.print(":\t");
+            SerialUSB.print(meas.time_shifting[i]); SerialUSB.print("\t\t");
+            SerialUSB.print(meas.captured_value[i]); SerialUSB.print("\t\t");
+            SerialUSB.println(meas.tare[i]);
+        }
+    }
 
     // Find the highest time shifting
-    uint32_t highest_time_shifting = meas.time_shifting[0];
+    uint32_t highest_time_shifting = 0; //meas.time_shifting[0];
     for(uint8_t i = 0; i < pulse::NB_COILS; i++) {
         if(meas.time_shifting[i] > highest_time_shifting && desired_channels[i]) {
             highest_time_shifting = meas.time_shifting[i];
